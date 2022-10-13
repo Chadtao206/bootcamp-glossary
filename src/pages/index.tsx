@@ -9,7 +9,7 @@ const isDevMode = process.env.NODE_ENV === "development";
 
 const Home: NextPage = () => {
   const [open, setOpen] = useState(false);
-  const { data, error } = trpc.glossary.getAll.useQuery();
+  const { data } = trpc.glossary.getAll.useQuery();
   const utils = trpc.useContext();
   const addOneMutation = trpc.glossary.addOne.useMutation();
   const handleAddOne = async (input: {
