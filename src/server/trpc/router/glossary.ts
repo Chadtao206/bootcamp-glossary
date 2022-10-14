@@ -29,4 +29,16 @@ export const exampleRouter = router({
     .mutation(({ ctx, input: { id } }) => {
       return ctx.prisma.glossary.delete({ where: { id } });
     }),
+  updateOne: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        term: z.string(),
+        definition: z.string(),
+        resourceURL: z.string(),
+      })
+    )
+    .mutation(({ ctx, input: { id, ...data } }) => {
+      return ctx.prisma.glossary.update({ where: { id }, data });
+    }),
 });

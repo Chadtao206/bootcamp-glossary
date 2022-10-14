@@ -3,15 +3,24 @@ import { useState } from "react";
 import Head from "next/head";
 import { PlusCircleIcon } from "@heroicons/react/24/solid";
 import { trpc } from "../utils/trpc";
-import Card from "../components/Card";
+import Card, { CardData } from "../components/Card";
 import Slider from "../components/Slider";
 const isDevMode = process.env.NODE_ENV === "development";
 
 const Home: NextPage = () => {
   const [open, setOpen] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [updateData, setUpdateData] = useState<CardData>();
   const { data } = trpc.glossary.getAll.useQuery();
   const utils = trpc.useContext();
   const addOneMutation = trpc.glossary.addOne.useMutation();
+  const updateOneMutation = trpc.glossary.updateOne.useMutation();
+
+  const handleCloseSlider = () => {
+    setOpen(false);
+    setTimeout(() => setIsUpdate(false), 300);
+  };
+
   const handleAddOne = async (input: {
     term: string;
     definition: string;
@@ -20,6 +29,27 @@ const Home: NextPage = () => {
     await addOneMutation.mutate(input, {
       onSuccess: () => utils.glossary.getAll.invalidate(),
     });
+  };
+
+  const handleOpenEdit = (data: CardData) => {
+    setUpdateData(data);
+    setIsUpdate(true);
+    setOpen(true);
+  };
+
+  const handleUpdateOne = async (input: {
+    term: string;
+    definition: string;
+    resourceURL: string;
+  }) => {
+    if (updateData) {
+      await updateOneMutation.mutate(
+        { ...input, id: updateData.id },
+        {
+          onSuccess: () => utils.glossary.getAll.invalidate(),
+        }
+      );
+    }
   };
 
   return (
@@ -36,7 +66,10 @@ const Home: NextPage = () => {
       <main className="container mx-auto flex min-h-screen flex-col items-center justify-center p-4">
         {!open && (
           <button
-            onClick={() => setOpen(true)}
+            onClick={() => {
+              setOpen(true);
+              setIsUpdate(false);
+            }}
             type="button"
             className="absolute top-1 right-1 inline-flex items-center rounded-md border border-transparent bg-indigo-400 p-1 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 md:top-4 md:right-4 md:px-6 md:py-3"
           >
@@ -44,7 +77,14 @@ const Home: NextPage = () => {
             <span className="hidden md:block">Add New</span>
           </button>
         )}
-        <Slider add={handleAddOne} open={open} setOpen={setOpen} />
+        <Slider
+          isUpdate={isUpdate}
+          add={handleAddOne}
+          open={open}
+          updateData={updateData}
+          closeSlider={handleCloseSlider}
+          doUpdate={handleUpdateOne}
+        />
         <h1 className="text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
           Le <span className="text-purple-300">Glossaire</span> App
         </h1>
@@ -55,6 +95,7 @@ const Home: NextPage = () => {
         <div className="mt-3 grid gap-3 pt-3 text-center md:grid-cols-2 lg:w-2/3">
           {data?.map((item) => (
             <Card
+              handleOpenEdit={handleOpenEdit}
               id={item.id}
               key={item.id}
               term={item.term}
@@ -67,12 +108,16 @@ const Home: NextPage = () => {
         <div className="flex w-full items-center justify-center pt-6 text-2xl text-blue-500">
           Made with 💗 by Dad
         </div>
-        <a href="https://github.com/Chadtao206/bootcamp-glossary" rel="noreferrer" target="_blank">
+        <a
+          href="https://github.com/Chadtao206/bootcamp-glossary"
+          rel="noreferrer"
+          target="_blank"
+        >
           <svg
             className="absolute bottom-2 left-2 h-8 w-8 text-blue-900 md:h-12 md:w-12"
             stroke="currentColor"
             fill="currentColor"
-            stroke-width="0"
+            strokeWidth="0"
             viewBox="0 0 448 512"
             xmlns="http://www.w3.org/2000/svg"
           >

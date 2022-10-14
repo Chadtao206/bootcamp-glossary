@@ -1,15 +1,25 @@
-import React, { Fragment, SetStateAction, Dispatch, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-
+import { CardData } from "./Card";
 export default function Slider({
   open,
-  setOpen,
+  closeSlider,
   add,
+  isUpdate,
+  updateData,
+  doUpdate,
 }: {
   open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
+  closeSlider: () => void;
   add: (input: {
+    term: string;
+    definition: string;
+    resourceURL: string;
+  }) => void;
+  isUpdate: boolean;
+  updateData?: CardData;
+  doUpdate: (input: {
     term: string;
     definition: string;
     resourceURL: string;
@@ -24,6 +34,16 @@ export default function Slider({
     definition: "",
     resourceURL: "",
   });
+
+  useEffect(() => {
+    if (isUpdate && updateData) {
+      setInput({
+        term: updateData.term,
+        definition: updateData.definition,
+        resourceURL: updateData.resourceURL,
+      });
+    }
+  }, [updateData, isUpdate]);
 
   const handleChange = (
     e:
@@ -40,13 +60,16 @@ export default function Slider({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (input.term && input.definition) {
-      add(input);
+      isUpdate ? doUpdate(input) : add(input);
+      closeSlider();
     }
   };
 
+  console.log(input);
+
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={() => setOpen(false)}>
+      <Dialog as="div" className="relative z-10" onClose={closeSlider}>
         <div className="fixed inset-0" />
 
         <div className="fixed inset-0 overflow-hidden">
@@ -72,7 +95,9 @@ export default function Slider({
                         <div className="flex items-start justify-between space-x-3">
                           <div className="space-y-1">
                             <Dialog.Title className="text-lg font-medium text-gray-900">
-                              Add a new term/phrase with definition
+                              {isUpdate
+                                ? "Update a term and/or its definition"
+                                : "Add a new term/phrase with definition"}
                             </Dialog.Title>
                             <p className="text-sm text-gray-500">
                               If you hear a term/phrase from Chad/Nick and you
@@ -84,7 +109,7 @@ export default function Slider({
                             <button
                               type="button"
                               className="text-gray-400 hover:text-gray-500"
-                              onClick={() => setOpen(false)}
+                              onClick={closeSlider}
                             >
                               <span className="sr-only">Close panel</span>
                               <XMarkIcon
@@ -111,6 +136,7 @@ export default function Slider({
                           <div className="sm:col-span-2">
                             <input
                               onChange={handleChange}
+                              value={input.term}
                               type="text"
                               name="term"
                               id="term"
@@ -133,10 +159,10 @@ export default function Slider({
                             <textarea
                               id="definition"
                               name="definition"
+                              value={input.definition}
                               onChange={handleChange}
                               rows={10}
                               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                              defaultValue={""}
                             />
                           </div>
                         </div>
@@ -159,6 +185,7 @@ export default function Slider({
                           type="text"
                           name="resourceURL"
                           id="resourceURL"
+                          value={input.resourceURL}
                           onChange={handleChange}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
@@ -171,7 +198,7 @@ export default function Slider({
                         <button
                           type="button"
                           className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                          onClick={() => setOpen(false)}
+                          onClick={closeSlider}
                         >
                           Cancel
                         </button>
@@ -179,7 +206,7 @@ export default function Slider({
                           type="submit"
                           className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
-                          Create
+                          {isUpdate ? "Update" : "Create"}
                         </button>
                       </div>
                     </div>
